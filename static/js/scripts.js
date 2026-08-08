@@ -7,6 +7,28 @@ const section_names = ['home', 'publications', 'awards']
 
 window.addEventListener('DOMContentLoaded', event => {
 
+    const progress = document.querySelector('.scroll-progress span');
+    const updateProgress = () => {
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.transform = `scaleX(${scrollable > 0 ? window.scrollY / scrollable : 0})`;
+    };
+    updateProgress();
+    window.addEventListener('scroll', updateProgress, { passive: true });
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('section:not(.top-section)').forEach((section) => {
+        section.classList.add('reveal');
+        revealObserver.observe(section);
+    });
+
     // Activate Bootstrap scrollspy on the main nav element
     const mainNav = document.body.querySelector('#mainNav');
     if (mainNav) {
@@ -56,6 +78,9 @@ window.addEventListener('DOMContentLoaded', event => {
                 const html = marked.parse(markdown);
                 document.getElementById(name + '-md').innerHTML = html;
             }).then(() => {
+                document.querySelectorAll(`#${name}-md > *`).forEach((item, itemIndex) => {
+                    item.style.setProperty('--item-index', itemIndex);
+                });
                 // MathJax
                 MathJax.typeset();
             })
